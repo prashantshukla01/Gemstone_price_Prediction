@@ -1,89 +1,429 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Gemstone Price Prediction</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  </head>
-  <body>
-    <h1>Gemstone Price Prediction - Prashant Shukla</h1>
-    <img src="{{url_for('static', filename='image/your_profile_pic.jpeg')}}" alt="Your Profile Picture" class="profile">
-    <div class="form-box">
-    <form action="{{url_for('predict_datapoint')}}" method="POST">
-        <div class="form-group">
-            <label for="carat">Carat:</label>
-            <input type="text" id="carat" name="carat" placeholder="Enter carat value (float)">
-        </div>
-    
-        <div class="form-group">
-            <label for="depth">Depth:</label>
-            <input type="text" id="depth" name="depth" placeholder="Enter depth value (float)">
-        </div>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemstone Price Prediction</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        <div class="form-group">  
-            <label for="table">Table:</label>
-            <input type="text" id="table" name="table" placeholder="Enter table value (float)">
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: #0a0a0a;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* Animated Background */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(240, 147, 251, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 50% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%);
+  animation: pulseGradient 8s ease-in-out infinite;
+}
+
+@keyframes pulseGradient {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: float 15s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.particle:nth-child(1) { width: 80px; height: 80px; top: 10%; left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { width: 60px; height: 60px; top: 60%; left: 80%; animation-delay: 3s; }
+.particle:nth-child(3) { width: 100px; height: 100px; top: 80%; left: 20%; animation-delay: 6s; }
+.particle:nth-child(4) { width: 40px; height: 40px; top: 30%; right: 15%; animation-delay: 9s; }
+.particle:nth-child(5) { width: 70px; height: 70px; bottom: 10%; left: 50%; animation-delay: 12s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+  33% { transform: translateY(-30px) translateX(20px) rotate(120deg); }
+  66% { transform: translateY(20px) translateX(-20px) rotate(240deg); }
+}
+
+.prediction-page {
+  position: relative;
+  z-index: 1;
+  padding: 40px 20px;
+  animation: fadeIn 0.8s ease;
+}
+
+.nav-back {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 12px 25px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+}
+
+.nav-back:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-5px);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.header h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 15px;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.profile {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+  transition: all 0.4s ease;
+}
+
+.profile:hover {
+  transform: scale(1.1) rotate(360deg);
+  border-color: #f093fb;
+}
+
+.creator-info {
+  text-align: left;
+}
+
+.creator-info h3 {
+  font-size: 1.3rem;
+  margin-bottom: 5px;
+}
+
+.creator-info p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+.form-box {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  padding: 50px;
+  border-radius: 30px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.form-box:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 30px 100px rgba(102, 126, 234, 0.3);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.form-group {
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group input[type="text"],
+.form-group select {
+  width: 100%;
+  padding: 16px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
+}
+
+.form-group input[type="text"]::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 45px;
+}
+
+.form-group select option {
+  background: #1a1a2e;
+  color: white;
+}
+
+.submit-container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 18px 70px;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.submit-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 25px 70px rgba(102, 126, 234, 0.7);
+}
+
+.submit-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.result-box {
+  margin-top: 50px;
+  padding: 40px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 25px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.result-box h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.result-price {
+  font-size: 3.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5)); }
+  50% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.8)); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .header h1 { font-size: 2.5rem; }
+  .form-box { padding: 30px 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .nav-back { top: 15px; left: 15px; padding: 10px 20px; }
+  .profile-section { flex-direction: column; }
+  .creator-info { text-align: center; }
+}
+</style>
+</head>
+<body>
+<div class="animated-bg">
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+</div>
+
+<div class="prediction-page">
+  <a href="/" class="nav-back">← Back to Home</a>
+  
+  <div class="container">
+    <div class="header">
+      <h1>✨ Predict Your Gemstone Value ✨</h1>
+      <div class="profile-section">
+        <img src="{{url_for('static', filename='image/your_profile_pic.jpeg')}}" alt="Prashant Shukla" class="profile">
+        <div class="creator-info">
+          <h3>Prashant Shukla</h3>
+          <p>Data Scientist & ML Engineer</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-box">
+      <form action="{{url_for('predict_datapoint')}}" method="POST">
+        <div class="form-grid">
+          <div class="form-group">
+            <label><span>💎</span> Carat Weight</label>
+            <input type="text" id="carat" name="carat" placeholder="0.50" required>
+          </div>
+          
+          <div class="form-group">
+            <label><span>📏</span> Depth %</label>
+            <input type="text" id="depth" name="depth" placeholder="61.5" required>
+          </div>
+          
+          <div class="form-group">
+            <label><span>📐</span> Table %</label>
+            <input type="text" id="table" name="table" placeholder="55.0" required>
+          </div>
+          
+          <div class="form-group">
+            <label><span>↔️</span> X Dimension (mm)</label>
+            <input type="text" id="x" name="x" placeholder="3.95" required>
+          </div>
+          
+          <div class="form-group">
+            <label><span>↕️</span> Y Dimension (mm)</label>
+            <input type="text" id="y" name="y" placeholder="3.98" required>
+          </div>
+          
+          <div class="form-group">
+            <label><span>⬍</span> Z Dimension (mm)</label>
+            <input type="text" id="z" name="z" placeholder="2.43" required>
+          </div>
+          
+          <div class="form-group">
+            <label><span>✂️</span> Cut Quality</label>
+            <select id="cut" name="cut">
+              <option value="Fair">Fair</option>
+              <option value="Good">Good</option>
+              <option value="Very Good">Very Good</option>
+              <option value="Premium" selected>Premium</option>
+              <option value="Ideal">Ideal</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label><span>🎨</span> Color Grade</label>
+            <select id="color" name="color">
+              <option value="D">D - Colorless</option>
+              <option value="E">E - Colorless</option>
+              <option value="F">F - Colorless</option>
+              <option value="G" selected>G - Near Colorless</option>
+              <option value="H">H - Near Colorless</option>
+              <option value="I">I - Near Colorless</option>
+              <option value="J">J - Near Colorless</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label><span>🔍</span> Clarity Grade</label>
+            <select id="clarity" name="clarity">
+              <option value="I1">I1 - Included</option>
+              <option value="SI2">SI2 - Slightly Included</option>
+              <option value="SI1">SI1 - Slightly Included</option>
+              <option value="VS2" selected>VS2 - Very Slightly Included</option>
+              <option value="VS1">VS1 - Very Slightly Included</option>
+              <option value="VVS2">VVS2 - Very Very Slightly Included</option>
+              <option value="VVS1">VVS1 - Very Very Slightly Included</option>
+              <option value="IF">IF - Internally Flawless</option>
+            </select>
+          </div>
         </div>
         
-        <div class="form-group">
-            <label for="x">x:</label>
-            <input type="text" id="x" name="x" placeholder="Enter x value (float)">
+        <div class="submit-container">
+          <input type="submit" class="submit-btn" value="Predict Price">
         </div>
-      
-        <div class="form-group">
-            <label for="y">y:</label>
-            <input type="text" id="y" name="y" placeholder="Enter y value (float)">
-        </div>
-      
-        <div class="form-group">
-            <label for="z">z:</label>
-            <input type="text" id="z" name="z" placeholder="Enter z value (float)">
-        </div>         
-      
-    <div class="form-group">
-      <label for="cut">Cut:</label>
-      <select id="cut" name="cut">
-        <option value="Fair">Fair</option>
-        <option value="Good">Good</option>
-        <option value="Very Good">Very Good</option>
-        <option value="Premium">Premium</option>
-        <option value="Ideal">Ideal</option>
-      </select>
+      </form>
     </div>
-      
-    <div class="form-group">
-      <label for="color">Color:</label>
-      <select id="color" name="color">
-        <option value="D">D</option>
-        <option value="E">E</option>
-        <option value="F">F</option>
-        <option value="G">G</option>
-        <option value="H">H</option>
-        <option value="I">I</option>
-        <option value="J">J</option>
-      </select>
+
+    {% if results %}
+    <div class="result-box">
+      <h2>💰 Estimated Gemstone Value</h2>
+      <div class="result-price">${{ results }}</div>
     </div>
-    
-    <div class="form-group">
-      <label for="clarity">Clarity:</label>
-      <select id="clarity" name="clarity">
-        <option value="I1">I1</option>
-        <option value="SI2">SI2</option>
-        <option value="SI1">SI1</option>
-        <option value="VS2">VS2</option>
-        <option value="VS1">VS1</option>
-        <option value="VVS2">VVS2</option>
-        <option value="VVS1">VVS1</option>
-        <option value="IF">IF</option>
-      </select>
-    </div>
-    
-    <div style="clear:both;"></div>
-      <input type="submit" value="Submit">
-    </form>
-    </div>
-    <div>      
-    <h2>
-      Predicted Gemstone Price is : {{ results }}
-    </h2>
-  </body>
+    {% endif %}
+  </div>
+</div>
+</body>
 </html>
